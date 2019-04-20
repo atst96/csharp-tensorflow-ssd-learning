@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28803.156
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TensorFlowSharpSSD", "TensorFlowSharpSSD.csproj", "{BF06D05F-5565-4F2F-955E-5958F4DEB80F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BF06D05F-5565-4F2F-955E-5958F4DEB80F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BF06D05F-5565-4F2F-955E-5958F4DEB80F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BF06D05F-5565-4F2F-955E-5958F4DEB80F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BF06D05F-5565-4F2F-955E-5958F4DEB80F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D4F25983-B810-4D03-9FBD-30EA48CCAAD5}
+	EndGlobalSection
+EndGlobal
