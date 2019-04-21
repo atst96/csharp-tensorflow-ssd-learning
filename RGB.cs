@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace TensorFlowSharpSSD
 {
+    [StructLayout(LayoutKind.Sequential)]
     internal struct RGB
     {
         public byte B;
@@ -20,6 +22,7 @@ namespace TensorFlowSharpSSD
         }
     }
 
+    [StructLayout(LayoutKind.Sequential)]
     internal struct ARGB
     {
         public byte A;

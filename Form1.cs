@@ -21,54 +21,42 @@ namespace TensorFlowSharpSSD
         public const string GraphFilePath = "./frozen_inference_graph.pb";
         public const string LabelFilePath = "./labels.txt";
 
+        private LabelInfo[] _labels;
+        private ObjectDetector _objectDetector;
+
         public Form1()
         {
             this.InitializeComponent();
+            this.ContextMenu = this.contextMenu1;
         }
 
-        protected override async void OnShown(EventArgs e)
+        protected override void OnShown(EventArgs e)
         {
             base.OnShown(e);
 
-            var ofd = new OpenFileDialog
-            {
-                Filter = "画像ファイル|*.png;*.jpg;*.jpeg;*.tiff;*.tif;*.bmp",
-            };
-
-            this.UseWaitCursor = true;
-
             this.SetStatusText("Loading labels...");
 
-            var labels = LabelUtility.GetLabelsFromFile(LabelFilePath);
+            this._labels = LabelUtility.GetLabelsFromFile(LabelFilePath);
 
             this.SetStatusText("Loading graph data...");
 
-            var detector = new ObjectDetector(GraphFilePath);
+            this._objectDetector = new ObjectDetector(GraphFilePath);
 
-            if (ofd.ShowDialog(this) == DialogResult.OK)
-            {
-                this.Text = $"{Path.GetFileName(ofd.FileName)} / 閾値: {ScoreThreshold:0.00}";
+            this.HideStatusText();
 
-                using (var image = new Bitmap(ofd.FileName))
-                {
-                    this.SetStatusText("Loading...");
+            this.SelectImage();
+        }
 
-                    var results = await Task.Run(() => detector.Predict(image));
-                    var output = await Task.Run(() => DrawLabels(image, results, labels, threshold: ScoreThreshold));
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            this._objectDetector?.Dispose();
 
-                    this.HideStatusText();
+            base.OnClosing(e);
+        }
 
-                    this.SetPreviewImage(output);
-                }
-
-            }
-
-            this.UseWaitCursor = false;
-
-            detector.Dispose();
-
-            ofd.Dispose();
-            ofd = null;
+        private Image GetPreviewImage()
+        {
+            return this.pictureBox1.Image;
         }
 
         private void SetPreviewImage(Bitmap image)
@@ -79,16 +67,73 @@ namespace TensorFlowSharpSSD
         private void ShowStatusText()
         {
             this.label1.Visible = true;
+            this.menuItem1.Enabled = false;
+            this.menuItem3.Enabled = false;
         }
 
         private void HideStatusText()
         {
             this.label1.Visible = false;
+            this.menuItem1.Enabled = true;
+            this.menuItem3.Enabled = true;
         }
 
         private void SetStatusText(string text)
         {
             this.label1.Text = text;
+        }
+
+        private async void SelectImage()
+        {
+            var ofd = new OpenFileDialog
+            {
+                Filter = "画像ファイル|*.png;*.jpg;*.jpeg;*.tiff;*.tif;*.bmp",
+            };
+
+            this.UseWaitCursor = true;
+
+            this.SetStatusText("Loading...");
+            this.ShowStatusText();
+
+            if (ofd.ShowDialog(this) == DialogResult.OK)
+            {
+                this.Text = $"{Path.GetFileName(ofd.FileName)} / 閾値: {ScoreThreshold:0.00}";
+
+                using (var image = new Bitmap(ofd.FileName))
+                {
+                    var results = await Task.Run(() => this._objectDetector.Predict(image));
+                    var output = await Task.Run(() => DrawLabels(image, results, this._labels, threshold: ScoreThreshold));
+
+                    this.HideStatusText();
+
+                    this.SetPreviewImage(output);
+                }
+
+            }
+
+            this.UseWaitCursor = false;
+
+            ofd.Dispose();
+            ofd = null;
+
+            this.HideStatusText();
+        }
+
+        private void SaveImage()
+        {
+            var dialog = new SaveFileDialog()
+            {
+                Filter = "BMP|*.bmp|PNG|*.png|JPEG|*.jpg|TIFF|*.tif;*.tiff|すべて|*.*"
+            };
+
+            if (dialog.ShowDialog(this) == DialogResult.OK)
+            {
+                var image = this.GetPreviewImage();
+                image.Save(dialog.FileName);
+            }
+
+            dialog.Dispose();
+            dialog = null;
         }
 
         private Bitmap DrawLabels(Bitmap image, Box[] boxes, LabelInfo[] labels, float threshold = 0f)
@@ -119,6 +164,16 @@ namespace TensorFlowSharpSSD
             g.Dispose();
 
             return destImage;
+        }
+
+        private void MenuItem1_Click(object sender, EventArgs e)
+        {
+            this.SelectImage();
+        }
+
+        private void MenuItem3_Click(object sender, EventArgs e)
+        {
+            this.SaveImage();
         }
     }
 }

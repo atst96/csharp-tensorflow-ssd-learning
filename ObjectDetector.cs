@@ -31,12 +31,12 @@ namespace TensorFlowSharpSSD
                     graph["detection_boxes"][0],
                     graph["detection_scores"][0],
                     graph["detection_classes"][0],
-                    // detectionGraph["num_detections"][0],
+                    // graph["num_detections"][0],
                 };
             }
         }
 
-        private static (TFSession session, TFOutput input, TFOutput output) CreateGraph(int imageWidth, int imageHeight)
+        private static (TFSession session, TFOutput input, TFOutput output) CreateRawImageGraph(int imageWidth, int imageHeight)
         {
             var graph = new TFGraph();
             var input = graph.Placeholder(TFDataType.String);
@@ -57,16 +57,16 @@ namespace TensorFlowSharpSSD
 
         private TFTensor CreateTensor(byte[] imageData, int width, int height)
         {
-            var (session, input, output) = CreateGraph(width, height);
+            var (session, input, output) = CreateRawImageGraph(width, height);
 
             using (session)
             {
                 var value = TFTensor.CreateString(imageData);
 
                 return session.Run(
-                    inputValues: new[] { value },
-                    inputs: new[] { input },
-                    outputs: new[] { output }
+                    inputValues: new[] { value  },
+                    inputs     : new[] { input  },
+                    outputs    : new[] { output }
                 )[0];
             }
         }
