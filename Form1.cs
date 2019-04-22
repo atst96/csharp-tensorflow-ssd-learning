@@ -102,7 +102,12 @@ namespace TensorFlowSharpSSD
                 using (var image = new Bitmap(ofd.FileName))
                 {
                     var results = await Task.Run(() => this._objectDetector.Predict(image));
-                    var output = await Task.Run(() => DrawLabels(image, results, this._labels, threshold: ScoreThreshold));
+
+                    var validBoxes = results
+                        .Where(b => b.Score > ScoreThreshold)
+                        .OrderBy(b => b.Score);
+
+                    var output = await Task.Run(() => DrawLabels(image, validBoxes, this._labels));
 
                     this.HideStatusText();
 
@@ -136,16 +141,20 @@ namespace TensorFlowSharpSSD
             dialog = null;
         }
 
-        private Bitmap DrawLabels(Bitmap image, Box[] boxes, LabelInfo[] labels, float threshold = 0f)
+        private Bitmap DrawLabels(Bitmap image, IEnumerable<Box> boxes, LabelInfo[] labels, bool drawLegend = true)
         {
             var destImage = new Bitmap(image);
 
             var g = Graphics.FromImage(destImage);
-            var textDrawBrush = Brushes.Black;
+            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
+
+            float textPadding = 2f;
+
+            var textDrawBrush = (SolidBrush)Brushes.Black;
 
             var font = new Font(LabelFontName, LabelFontSize);
 
-            foreach (var box in boxes.Where(b => b.Score >= threshold))
+            foreach (var box in boxes)
             {
                 var label = labels[box.ClassId];
 
@@ -155,15 +164,41 @@ namespace TensorFlowSharpSSD
                 g.DrawRectangle(label.DrawPen, box.Rectangle);
 
                 var textSize = g.MeasureString(labelText, font);
-                float textYPos = Math.Max(0, rect.Y - (int)textSize.Height);
+                float textYPos = Math.Max(0, rect.Y - textSize.Height);
 
-                g.FillRectangle(label.DrawBrush, rect.X, textYPos, textSize.Width, textSize.Height);
+                g.FillRectangle(label.DrawBrush, rect.X - textPadding, textYPos - textPadding, textSize.Width + textPadding, textSize.Height + textPadding);
                 g.DrawString(labelText, font, textDrawBrush, rect.X, textYPos);
+            }
+
+            if (drawLegend)
+            {
+                var pos = new PointF();
+
+                foreach (var label in labels.Skip(1))
+                {
+                    int classCount = boxes.Count(box => box.ClassId == label.ClassId);
+
+                    var text = $"#{label.ClassId} {label.Text} ({classCount})";
+                    var rect = DrawStringWithBackground(g, text, font, textDrawBrush, label.DrawBrush, pos, 4);
+
+                    pos.Y += (int)rect.Height;
+                }
             }
 
             g.Dispose();
 
             return destImage;
+        }
+
+        private static RectangleF DrawStringWithBackground(Graphics g, string text, Font font, Brush textBrush, Brush backgroundBrush, PointF pos, float padding = 0f)
+        {
+            var textSize = g.MeasureString(text, font);
+            var rect = new RectangleF(pos.X, pos.Y, textSize.Width + padding * 2, textSize.Height + padding * 2);
+
+            g.FillRectangle(backgroundBrush, rect);
+            g.DrawString(text, font, textBrush, pos.X + padding, pos.Y + padding);
+
+            return rect;
         }
 
         private void MenuItem1_Click(object sender, EventArgs e)

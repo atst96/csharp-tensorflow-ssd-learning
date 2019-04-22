@@ -18,19 +18,21 @@ namespace TensorFlowSharpSSD
         public static LabelInfo[] GetLabels(string[] labelTexts)
         {
             var labels = new LabelInfo[labelTexts.Length];
+            float length = labelTexts.Length;
 
-            for (int i = 0; i < labels.Length; ++i)
+            for (int idx = 0; idx < labels.Length; ++idx)
             {
-                var color = ColorUtility.ColorFromHue((i + 1.0f) / labelTexts.Length);
+                var color = ColorUtility.ColorFromHue(idx / length);
 
                 var label = new LabelInfo
                 {
-                    Text = labelTexts[i],
+                    ClassId = idx,
+                    Text = labelTexts[idx],
                     DrawBrush = new SolidBrush(color),
                 };
                 label.DrawPen = new Pen(label.DrawBrush, 4.0f);
 
-                labels[i] = label;
+                labels[idx] = label;
             }
 
             return labels;
